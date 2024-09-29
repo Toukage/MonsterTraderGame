@@ -5,7 +5,7 @@ public class Class1
 {
 	public Class1()
 	{
-		string connectionString = "Host=localhost;Port=5432;Username=sura2011tele2@gmail.com;Password=Namjoon0912;Database=monster_trading_card_game";
+		string connectionString = "Host=localhost;Port=5432;Username=toukage;Password=mtcgserver;Database=Monster_Trading_Card_Game";
 
 	}
 }
