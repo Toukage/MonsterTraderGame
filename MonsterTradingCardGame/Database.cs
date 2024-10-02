@@ -1,11 +1,16 @@
-﻿using System;
-
-
-public class Class1
+﻿using Npgsql;
+using System;
+using System.Threading.Tasks;
+/*
+ Use sql to insert and extract data from database
+ */
+public class Database
 {
-	public Class1()
+	private readonly string connectionString = "Host=localhost;Port=5432;Username=toukage;Password=mtcgserver;Database=Monster_Trading_Card_Game";
+
+    public void Register(string userName, string passWord)
 	{
-		string connectionString = "Host=localhost;Port=5432;Username=sura2011tele2@gmail.com;Password=Namjoon0912;Database=monster_trading_card_game";
 
 	}
+	
 }
