@@ -12,7 +12,6 @@ namespace MonsterTradingCardGame
         private readonly string serverUrl; // stores the Url that the server will listen to (readonly damit es nie verändert wird)
         private volatile bool _isRunning = true; // Flag to control the loop
 
-
         public Server(string url) //server constructor initialise den Server 
         { 
             serverUrl = url; // assings the value of 'url' to a member variable so we can access it later (stores server url)
@@ -20,70 +19,95 @@ namespace MonsterTradingCardGame
             listener.Prefixes.Add(url); // tells the listener that this is the adress that the server will respond to 
         }
 
+        //--------Server--Starting--and--Stopping--------
+
         public void Start() // methode to start the Server
         { 
             listener.Start();// listener is allowed to start accepting requests
-            Console.WriteLine($"Server started at {_url}");// shows that the server is running in the console
-            Console.WriteLine("Press Enter to stop the server..."); //message to show how to stop the server
+            Console.WriteLine($"Server started at {serverUrl}");// shows that the server is running in the console
 
-
-            // Start a thread to listen for key press to stop the server
-            Thread keyListener = new Thread(() =>
+            Thread serverThread = new Thread(() =>
             {
-                Console.ReadLine(); // Wait for Enter key
-                _isRunning = false; // Set the flag to false
+                while (_isRunning)
+                {
+                    HttpListenerContext context = listener.GetContext();// stops the threat until a request is recived (cuz unnecessary CPU use)
+                    HandleRequest(context);// sends requests to the handler
+                }
             });
 
-            keyListener.Start(); // Start the thread
-
-            while (_isRunning)
+            serverThread.Start(); //started den server thread
+            while (true)
             {
-                HttpListenerContext context = listener.GetContext();// stops the threat until a request is recived (cuz unnecessary CPU use)
-                HandleRequest(context);// sends requests to the handler
+                string input = Console.ReadLine();
+                if(input == "exit")
+                {
+                    _isRunning = false;
+                    listener.Stop();
+                    Console.WriteLine("Server stopped! xoxo");
+                    break;
+                }
             }
-
-            // Cleanup after exiting the loop
-            listener.Stop(); // Stop the listener
-            Console.WriteLine("Server stopped.");
+            
 
 
         }
 
+        //-----------Request--Handler-----------
+
         private void HandleRequest(HttpListenerContext context)// methode to process requests
         {
-            HttpListenerRequest request = context.Request;// recives the request from the context
+            HttpListenerRequest request = context.Request;// recives the request/response from the context
             HttpListenerResponse response = context.Response;
 
-            if(request.HttpMethod == "POST")
+            switch(request.HttpMethod)//switch case für routing, if else war sehr messy, curl script wird hier auch beachtet (obv)
             {
-                using (var reader = new StreamReader(request.InputStream, request.ContentEncoding))//decodes and reads
-                {
-                    if(request.Url.AbsolutePath == "/register")// checks if user wants to register
+                case "POST": //für die methods die was am server 'ändern'
+                    if(request.Url.AbsolutePath == "/register") // liest welche rout angegeben wurde
                     {
-                        Console.WriteLine($"User wants to register");//sends message to terminal to show the users action
-                        string requestMessage = reader.ReadToEnd();//reads the entire message
-                        var formData = System.Web.HttpUtility.ParseQueryString(requestMessage);//converts the string into a data format
-                        string username = formData["username"];//sets the username to be the same as the item "username" from the client request
-                        Console.WriteLine($"Received username: {username}");//sends message to terminal to show that the username was recieved correctly
+                        Register(request, response);//routet weiter an die richtige function 
                     }
-                    else if(request.Url.AbsolutePath == "/sessions")//checks if user wants to login
+                    else if (request.Url.AbsolutePath == "/session")
                     {
-                        Console.WriteLine($"User wants to login");//sends message to terminal to show the users action
-                        string requestMessage = reader.ReadToEnd();
-                        var formData = System.Web.HttpUtility.ParseQueryString(requestMessage);
-                        string username = formData["username"];
-                        string password = formData["password"];
-                        Console.WriteLine($"Received username: {username}");
-                        Console.WriteLine($"Received password: {password}");
+                        Login(request, response);
+                    }
+                    else if (request.Url.AbsolutePath == "/battle")
+                    {
+                        Battle(request, response);
+                    }
+                    else if (request.Url.AbsolutePath == "/trade")
+                    {
+                        Trade(request, response);
+                    }
+                    else
+                    {
+                        NotFound(response);//function zur anzeige von notfound error code
+                    }
+                    break;
 
+                case "GET": //für methodes die am server nur 'lesen' möchten (d.h. no changes)
+                    if (request.Url.AbsolutePath == "/stack")
+                    {
+                        GetStack(request, response);
                     }
-                }
+                    else if (request.Url.AbsolutePath == "/deck")
+                    {
+                        GetDeck(request, response);
+                    }
+                    else
+                    {
+                        NotFound(response);//function zur anzeige von notfound error code
+                    }
+                    break;
+                default:
+                    BadReq(response);//function zur anzeige von BadRequest error code
+                    break;
             }
 
-            Console.WriteLine($"Receuved request: {request.HttpMethod} {request.Url}"); // logging for debugging uses
-
+            Console.WriteLine($"Recieved request: {request.HttpMethod} {request.Url}"); // logging for debugging uses
+            response.OutputStream.Close();
+            /* //----------------standart---msg----(jetzt redundant)
             HttpListenerResponse clientResponse = context.Response;// gets the response to send back to client
-            string responseString = "<html><body>Hello, Rigby</body></html>"; // html response that will be sent back to client (you can see this in your browser under http://localhost:10001/)
+            string responseString = "<html><body>Hello, Rigby</body></html>"; // html response that will be sent back to client (you can see this in your browser under http://localhost:10001/) (das its nur für debugging purposes right now)
 
             byte[] buffer = Encoding.UTF8.GetBytes( responseString );// converts the html string into an array so it can be send over the network
             response.ContentLength64 = buffer.Length;// so client know how much data to expect 
@@ -91,23 +115,68 @@ namespace MonsterTradingCardGame
             using (Stream output = clientResponse.OutputStream)// server wirtes response that will be sent back with outputStream (used for sending data over HTTP)
             {
                 output.Write( buffer, 0, buffer.Length );// sends said response over to the client
-            }
+            }*/
         }
 
-        public void Stop() // methode to stop Server  (not yet in use)
+        //-------------Error--Codes-------------
+
+        private void NotFound(HttpListenerResponse response) //route not found (404 error)
         {
-            listener.Stop(); // stops the listener
-            Console.WriteLine("Server stopped."); // message to show thatthe server has stopped
+            response.StatusCode = 404; // wenn die route nicht gefunden wird
+            byte[] buffer = Encoding.UTF8.GetBytes("Route not found :(((");//byte array um dem server die nachricht im richtigen format schicken zu können
+            response.OutputStream.Write(buffer, 0, buffer.Length);//schreibt den umgewandelten byte array in die response rein
+        }
+        private void BadReq(HttpListenerResponse response) // bad request (400 error)
+        {
+            response.StatusCode = 400;
+            byte[] buffer = Encoding.UTF8.GetBytes("Bad Request: Wrong Http methode :/");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
         }
 
+        //----------------------REGISTRATION--UND--LOGIN----------------------
 
-        //-------------------------------------------------------REGISTRATION--UND--LOGIN-----------------------------------------------------------------------
-
-        /*public bool Register(HTTPlistenerContext contexts)// use  here
+        public void Login(HttpListenerRequest request, HttpListenerResponse response)
         {
+            response.StatusCode =200; // code for "OK"
+            byte[] buffer = Encoding.UTF8.GetBytes("Login works LETS GO RIGBY");
+            response.OutputStream.Write(buffer , 0, buffer.Length);
+        }
+        public void Register(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            response.StatusCode = 200;
+            byte[] buffer = Encoding.UTF8.GetBytes("Registration works!!!! WOOOHOOO");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
 
-        }*/
+        //---------------------User-data-Get---------------------
 
+        public void GetStack(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            response.StatusCode = 200; // code for "OK"
+            byte[] buffer = Encoding.UTF8.GetBytes("user getting theis stacks ? pls work");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+        public void GetDeck(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            response.StatusCode = 200; // code for "OK"
+            byte[] buffer = Encoding.UTF8.GetBytes("user trying to get deck...pleaseeeee");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+
+        //---------------------Game----Logic---------------------
+
+        public void Battle(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            response.StatusCode = 200; // code for "OK"
+            byte[] buffer = Encoding.UTF8.GetBytes("TRYNA BATTLE !!!");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
+        public void Trade(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            response.StatusCode = 200; // code for "OK"
+            byte[] buffer = Encoding.UTF8.GetBytes("Tradingggg.............");
+            response.OutputStream.Write(buffer, 0, buffer.Length);
+        }
     }
 }
 
