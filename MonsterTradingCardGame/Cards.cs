@@ -18,28 +18,27 @@ public class Card
         Normal
     }
 
-    public Card()//constructor to show what a card entails
-	{
-		public string Name
-        {
-            get;
-            set;
-        }
-        public int Damage
-        {
-            get;
-            set;
-        }
-        public ElementType Element
-        { 
-            get; 
-            set; 
-        }
-        public CardType Type
-        { 
-            get; 
-            set; 
-        }
+    public string Name
+    {
+        get;
+        set;
+    }
+    public int Damage
+    {
+        get;
+        set;
+    }
+    public ElementType Element
+    {
+        get;
+        set;
+    }
+    public CardType Type
+    {
+        get;
+        set;
+    }
+    
 
     public Card(string name, int damage, CardType type, ElementType element)//assignes the porperties to a Card
     {
