@@ -9,13 +9,13 @@ namespace MonsterTradingCardGame
     public class Server
     {
         private HttpListener _listener; //class that listens to HTTP requests
-        private readonly string _url; // stores the Url that the server will listen to (readonly damit es nie verändert wird)
+        private readonly string serverUrl; // stores the Url that the server will listen to (readonly damit es nie verändert wird)
         private volatile bool _isRunning = true; // Flag to control the loop
 
 
-        public Server(string url) 
+        public Server(string url) //server constructor initialise den Server 
         { 
-            _url = url; // assings the value of 'url' to a member variable so we can access it later 
+            serverUrl = url; // assings the value of 'url' to a member variable so we can access it later 
             _listener = new HttpListener(); // Iniates the listener object
             _listener.Prefixes.Add(url); // tells the listener that this is the adress that the server will respond to 
         }
@@ -23,7 +23,7 @@ namespace MonsterTradingCardGame
         public void Start() // methode to start the Server
         { 
             _listener.Start();// listener is allowed to start accepting requests
-            Console.WriteLine($"Server started at {_url}");// shows that the server is running in the console
+            Console.WriteLine($"Server started at {_serverUrl}");// shows that the server is running in the console
             Console.WriteLine("Press Enter to stop the server..."); //message to show how to stop the server
 
 
