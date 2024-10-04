@@ -47,8 +47,6 @@ namespace MonsterTradingCardGame
                     break;
                 }
             }
-            
-
 
         }
 
@@ -105,17 +103,6 @@ namespace MonsterTradingCardGame
 
             Console.WriteLine($"Recieved request: {request.HttpMethod} {request.Url}"); // logging for debugging uses
             response.OutputStream.Close();
-            /* //----------------standart---msg----(jetzt redundant)
-            HttpListenerResponse clientResponse = context.Response;// gets the response to send back to client
-            string responseString = "<html><body>Hello, Rigby</body></html>"; // html response that will be sent back to client (you can see this in your browser under http://localhost:10001/) (das its nur für debugging purposes right now)
-
-            byte[] buffer = Encoding.UTF8.GetBytes( responseString );// converts the html string into an array so it can be send over the network
-            response.ContentLength64 = buffer.Length;// so client know how much data to expect 
-
-            using (Stream output = clientResponse.OutputStream)// server wirtes response that will be sent back with outputStream (used for sending data over HTTP)
-            {
-                output.Write( buffer, 0, buffer.Length );// sends said response over to the client
-            }*/
         }
 
         //-------------Error--Codes-------------
