@@ -8,22 +8,22 @@ namespace MonsterTradingCardGame
 
     public class Server
     {
-        private HttpListener _listener; //class that listens to HTTP requests
+        private HttpListener listener; //class that listens to HTTP requests
         private readonly string serverUrl; // stores the Url that the server will listen to (readonly damit es nie verändert wird)
         private volatile bool _isRunning = true; // Flag to control the loop
 
 
         public Server(string url) //server constructor initialise den Server 
         { 
-            serverUrl = url; // assings the value of 'url' to a member variable so we can access it later 
-            _listener = new HttpListener(); // Iniates the listener object
-            _listener.Prefixes.Add(url); // tells the listener that this is the adress that the server will respond to 
+            serverUrl = url; // assings the value of 'url' to a member variable so we can access it later (stores server url)
+            listener = new HttpListener(); // Iniates the listener object
+            listener.Prefixes.Add(url); // tells the listener that this is the adress that the server will respond to 
         }
 
         public void Start() // methode to start the Server
         { 
-            _listener.Start();// listener is allowed to start accepting requests
-            Console.WriteLine($"Server started at {_serverUrl}");// shows that the server is running in the console
+            listener.Start();// listener is allowed to start accepting requests
+            Console.WriteLine($"Server started at {_url}");// shows that the server is running in the console
             Console.WriteLine("Press Enter to stop the server..."); //message to show how to stop the server
 
 
@@ -38,12 +38,12 @@ namespace MonsterTradingCardGame
 
             while (_isRunning)
             {
-                HttpListenerContext context = _listener.GetContext();// stops the threat until a request is recived (cuz unnecessary CPU use)
+                HttpListenerContext context = listener.GetContext();// stops the threat until a request is recived (cuz unnecessary CPU use)
                 HandleRequest(context);// sends requests to the handler
             }
 
             // Cleanup after exiting the loop
-            _listener.Stop(); // Stop the listener
+            listener.Stop(); // Stop the listener
             Console.WriteLine("Server stopped.");
 
 
@@ -96,7 +96,7 @@ namespace MonsterTradingCardGame
 
         public void Stop() // methode to stop Server  (not yet in use)
         {
-            _listener.Stop(); // stops the listener
+            listener.Stop(); // stops the listener
             Console.WriteLine("Server stopped."); // message to show thatthe server has stopped
         }
 
