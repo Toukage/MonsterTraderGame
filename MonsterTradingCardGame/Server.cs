@@ -8,6 +8,10 @@ namespace MonsterTradingCardGame
 
     public class Server
     {
+        //-----------Other--Classes-----------
+        private UserManagement userManagement;
+
+        //----------Actual---Server---Code----------
         private HttpListener listener; //class that listens to HTTP requests
         private readonly string serverUrl; // stores the Url that the server will listen to (readonly damit es nie verändert wird)
         private volatile bool _isRunning = true; // Flag to control the loop
@@ -17,6 +21,9 @@ namespace MonsterTradingCardGame
             serverUrl = url; // assings the value of 'url' to a member variable so we can access it later (stores server url)
             listener = new HttpListener(); // Iniates the listener object
             listener.Prefixes.Add(url); // tells the listener that this is the adress that the server will respond to 
+
+            //-----------Other--Classes-----------
+            userManagement = new UserManagement();
         }
 
         //--------Server--Starting--and--Stopping--------
@@ -66,7 +73,8 @@ namespace MonsterTradingCardGame
                     }
                     else if (request.Url.AbsolutePath == "/session")
                     {
-                        Login(request, response);
+                        userManagement.Login(request, response);
+                        //Login(request, response);
                     }
                     else if (request.Url.AbsolutePath == "/battle")
                     {
@@ -122,12 +130,7 @@ namespace MonsterTradingCardGame
 
         //----------------------REGISTRATION--UND--LOGIN----------------------
 
-        public void Login(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            response.StatusCode =200; // code for "OK"
-            byte[] buffer = Encoding.UTF8.GetBytes("Login works LETS GO RIGBY");
-            response.OutputStream.Write(buffer , 0, buffer.Length);
-        }
+       
         public void Register(HttpListenerRequest request, HttpListenerResponse response)
         {
             response.StatusCode = 200;
