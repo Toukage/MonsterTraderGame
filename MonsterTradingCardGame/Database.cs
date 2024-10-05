@@ -6,7 +6,7 @@ using System.Threading.Tasks;
  */
 public class Database
 {
-	private readonly string connectionString = "Host=localhost;Port=5432;Username=toukage;Password=mtcgserver;Database=Monster_Trading_Card_Game";
+	private readonly string connectionString = "Host=localhost;Port=5432;Username=toukage;Password=mtcgserver;Database=MTCG_DB";
 
     public void Register(string userName, string passWord)
 	{
