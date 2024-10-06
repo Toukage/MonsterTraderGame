@@ -64,17 +64,40 @@ namespace MonsterTradingCardGame
             HttpListenerRequest request = context.Request;// recives the request/response from the context
             HttpListenerResponse response = context.Response;
 
-            switch(request.HttpMethod)//switch case für routing, if else war sehr messy, curl script wird hier auch beachtet (obv)
+            string username = null;
+            string password = null;
+
+            StreamReader reader = null;
+
+            try
+            {
+                reader = new StreamReader(request.InputStream, request.ContentEncoding);
+                string requestBody = reader.ReadToEnd();
+                var requestData = System.Web.HttpUtility.ParseQueryString(requestBody);
+                username = requestData["username"];
+                password = requestData["password"];
+            }
+            finally
+            {
+               reader?.Close();
+            }
+
+            if(string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            {
+                BadReq(response);
+                return;
+            }
+
+            switch (request.HttpMethod)//switch case für routing, if else war sehr messy, curl script wird hier auch beachtet (obv)
             {
                 case "POST": //für die methods die was am server 'ändern'
                     if(request.Url.AbsolutePath == "/register") // liest welche rout angegeben wurde
                     {
-                        Register(request, response);//routet weiter an die richtige function 
+                        userManagement.Register(username, password, response); //routet weiter an die richtige function 
                     }
                     else if (request.Url.AbsolutePath == "/session")
                     {
-                        userManagement.Login(request, response);
-                        //Login(request, response);
+                        userManagement.Login(username, password, response);
                     }
                     else if (request.Url.AbsolutePath == "/battle")
                     {
@@ -128,16 +151,6 @@ namespace MonsterTradingCardGame
             response.OutputStream.Write(buffer, 0, buffer.Length);
         }
 
-        //----------------------REGISTRATION--UND--LOGIN----------------------
-
-       
-        public void Register(HttpListenerRequest request, HttpListenerResponse response)
-        {
-            response.StatusCode = 200;
-            byte[] buffer = Encoding.UTF8.GetBytes("Registration works!!!! WOOOHOOO");
-            response.OutputStream.Write(buffer, 0, buffer.Length);
-        }
-
         //---------------------User-data-Get---------------------
 
         public void GetStack(HttpListenerRequest request, HttpListenerResponse response)
@@ -174,7 +187,7 @@ namespace MonsterTradingCardGame
 CurlScripts,
 
 Login:
-curl -X POST http://localhost:10001/sessions ^
+curl -X POST http://localhost:10001/session ^
 -H "Content-Type: application/x-www-form-urlencoded" ^
 -d "username=testuser&password=testpass"
 
